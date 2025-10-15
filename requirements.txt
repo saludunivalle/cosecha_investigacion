@@ -1,5 +1,5 @@
 pandas
 Requests
-scholarly
 python-dotenv
 rich
+openpyxl

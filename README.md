@@ -63,11 +63,9 @@ Este programa busca automáticamente las publicaciones académicas (artículos, 
 
 ### Para Windows
 
-1. **Descarga este proyecto** (o recíbelo de quien te lo compartió)
+1. **Abre la carpeta del proyecto** en el Explorador de Archivos
 
-2. **Abre la carpeta del proyecto** en el Explorador de Archivos
-
-3. **Haz doble clic** en el archivo `setup.bat`
+2. **Haz doble clic** en el archivo `setup.bat`
    - Se abrirá una ventana negra (consola)
    - Verás mensajes de instalación
    - Espera a que termine (puede tomar 2-3 minutos)
@@ -75,21 +73,19 @@ Este programa busca automáticamente las publicaciones académicas (artículos, 
 
 ### Para Mac o Linux
 
-1. **Descarga este proyecto** (o recíbelo de quien te lo compartió)
-
-2. **Abre la Terminal**:
+1. **Abre la Terminal**:
    - En Mac: Busca "Terminal" en Spotlight
    - En Linux: Presiona `Ctrl + Alt + T`
 
-3. **Navega a la carpeta del proyecto**:
+2. **Navega a la carpeta del proyecto**:
 
    ```bash
-   cd ruta/donde/descargaste/el/proyecto
+   cd ruta/del/proyecto
    ```
 
-   (Reemplaza `ruta/donde/descargaste/el/proyecto` con la ubicación real)
+   (Reemplaza `ruta/del/proyecto` con la ubicación real)
 
-4. **Ejecuta el instalador**:
+3. **Ejecuta el instalador**:
 
    ```bash
    bash setup.sh
@@ -211,9 +207,11 @@ Una vez configurado todo:
 
 ## 📈 Ver los resultados
 
-Cuando el programa termine, encontrarás un archivo nuevo:
+Cuando el programa termine, encontrarás un archivo nuevo en la **carpeta principal del proyecto**:
 
-📁 **`orcid/output.csv`**
+📁 **`publicaciones_orcid_YYYY-MM-DD.xlsx`**
+
+Por ejemplo: `publicaciones_orcid_2025-10-14.xlsx`
 
 Este archivo contiene todas las publicaciones encontradas con la siguiente información:
 
@@ -231,8 +229,16 @@ Este archivo contiene todas las publicaciones encontradas con la siguiente infor
 
 ### ¿Cómo abrir los resultados?
 
-- **En Excel**: Archivo → Abrir → Selecciona `output.csv`
-- **En Google Sheets**: Archivo → Importar → Sube el archivo `output.csv`
+- **En Excel**: Simplemente haz doble clic sobre el archivo (formato nativo de Excel)
+- **En Google Sheets**: Archivo → Importar → Sube el archivo `.xlsx`
+- **En LibreOffice Calc**: Archivo → Abrir → Selecciona el archivo
+
+### Ventajas del formato XLSX
+
+✅ **Formato nativo de Excel** - Se abre directamente sin problemas de codificación  
+✅ **Mejor presentación** - Mantiene el formato de las celdas  
+✅ **Más fácil de compartir** - Compatible con todos los programas de hojas de cálculo  
+✅ **Nombre con fecha** - Cada ejecución genera un archivo único, no se sobrescribe
 
 ---
 
@@ -327,6 +333,7 @@ Si después de revisar esta guía sigues teniendo problemas:
 
 - Python 3.8+
 - Pandas (procesamiento de datos)
+- OpenPyXL (exportación a Excel)
 - ORCID API (datos de publicaciones)
 - Rich (interfaz visual)
 
@@ -334,17 +341,17 @@ Si después de revisar esta guía sigues teniendo problemas:
 
 ```bash
 📁 Proyecto
-├── 📄 main.py              # Programa principal
-├── 📄 input.csv            # Tus datos de entrada
-├── 📄 requirements.txt     # Librerías necesarias
-├── 📄 .env                 # Tus credenciales (privado)
-├── 📄 setup.sh / setup.bat # Instaladores
-├── 📄 start.sh / start.bat # Ejecutores
-└── 📁 orcid/               # Módulo de ORCID
-    ├── 📄 app.py           # Lógica principal
-    ├── 📄 utils.py         # Funciones auxiliares
-    ├── 📄 output.csv       # RESULTADOS
-    └── 📁 logs/            # Registros de ejecución
+├── 📄 main.py                           # Programa principal
+├── 📄 input.csv                         # Tus datos de entrada
+├── 📄 requirements.txt                  # Librerías necesarias
+├── 📄 .env                              # Tus credenciales (privado)
+├── 📄 setup.sh / setup.bat              # Instaladores
+├── 📄 start.sh / start.bat              # Ejecutores
+├── 📄 publicaciones_orcid_YYYY-MM-DD.xlsx  # RESULTADOS (se genera aquí)
+└── 📁 orcid/                            # Módulo de ORCID
+    ├── 📄 app.py                        # Lógica principal
+    ├── 📄 utils.py                      # Funciones auxiliares
+    └── � logs/                         # Registros de ejecución
 ```
 
 ---
@@ -356,5 +363,3 @@ Este proyecto está diseñado para uso académico e investigativo.
 ---
 
 **¡Listo!** 🎉 Ahora estás preparado para usar el extractor de publicaciones ORCID.
-
-Si esta guía te fue útil, compártela con otros investigadores que puedan necesitarla.
