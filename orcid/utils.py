@@ -3,9 +3,10 @@ import os
 import sys
 import time
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
+from rich.console import Console
 
 # Configuración de logging
 log_file = os.path.join(os.path.dirname(__file__), "orcid.log")
@@ -274,7 +275,7 @@ def _create_work_record(user: Dict, work_summary: List[Dict]) -> Dict:
     }
 
 
-def get_records(user: Dict, access_token: str, file_output: List[Dict]) -> None:
+def get_records(user: Dict, access_token: str, file_output: List[Dict], console: Optional[Console] = None) -> None:
     """
     Obtiene registros de publicaciones para un usuario ORCID.
 
@@ -282,6 +283,7 @@ def get_records(user: Dict, access_token: str, file_output: List[Dict]) -> None:
         user: Diccionario con datos del usuario (orcid, nombre, cedula)
         access_token: Token de acceso ORCID
         file_output: Lista donde se agregan los registros obtenidos
+        console: Rich Console para output (opcional)
     """
     orcid = user.get("orcid")
     nombre = user.get("nombre", "Desconocido")
@@ -289,8 +291,6 @@ def get_records(user: Dict, access_token: str, file_output: List[Dict]) -> None:
     if not orcid:
         logging.error(f"ORCID vacío para usuario: {nombre}")
         return
-
-    sys.stdout.write(f"Obteniendo registros para ORCID: {orcid} ")
 
     try:
         # Configurar headers para la API
@@ -305,7 +305,9 @@ def get_records(user: Dict, access_token: str, file_output: List[Dict]) -> None:
         data = response.json()
         works = data.get("group", [])
 
-        sys.stdout.write(f"»» {len(works)} trabajos\n")
+        if console:
+            console.print(f"  [dim]→ {nombre} ([cyan]{orcid}[/]): [green]{len(works)}[/] trabajos[/]")
+        
         logging.info(f"ORCID {orcid}: {len(works)} trabajos encontrados")
 
         if not works:
@@ -329,19 +331,22 @@ def get_records(user: Dict, access_token: str, file_output: List[Dict]) -> None:
 
     except requests.Timeout:
         error_msg = f"Timeout conectando a ORCID para {orcid}"
-        sys.stdout.write("»» TIMEOUT\n")
+        if console:
+            console.print(f"  [yellow]⏱️  Timeout: {nombre}[/]")
         logging.error(error_msg)
         file_output.append(_create_error_record(user, f"ERROR: {error_msg}"))
 
     except requests.RequestException as e:
         error_msg = f"Error de red para ORCID {orcid}: {e}"
-        sys.stdout.write("»» ERROR DE RED\n")
+        if console:
+            console.print(f"  [red]🌐 Error de red: {nombre}[/]")
         logging.error(error_msg)
         file_output.append(_create_error_record(user, f"ERROR: {str(e)}"))
 
     except Exception as e:
         error_msg = f"Error inesperado para ORCID {orcid}: {e}"
-        sys.stdout.write("»» ERROR\n")
+        if console:
+            console.print(f"  [red]❌ Error: {nombre}[/]")
         logging.error(error_msg)
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             traceback.print_exc()
