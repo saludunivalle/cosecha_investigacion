@@ -1,11 +1,9 @@
 import os
-import sys
 from typing import List, Dict, Set, Tuple
 
 import pandas as pd
 
 from orcid.utils import get_credentials, get_records, logging
-from utils import save_summary
 
 
 def load_valid_users(input_file: str) -> pd.DataFrame:
@@ -160,9 +158,6 @@ def orcid() -> None:
         # 4. Guardar resultados
         save_results(output_data, output_file)
 
-        # 5. Guardar resumen
-        save_summary({"orcid": summary}, root)
-
         # Mostrar estadísticas finales
         print(f"\nProcesamiento completado:")
         print(f"- Usuarios procesados: {summary['index']}/{summary['total_users']}")
@@ -175,10 +170,6 @@ def orcid() -> None:
         error_msg = f"Error crítico en procesamiento ORCID: {e}"
         print(error_msg)
         logging.error(error_msg)
-
-        # Guardar resumen con error
-        error_summary = {"complete": False, "error": str(e), "index": 0}
-        save_summary({"orcid": error_summary}, root)
 
         # Re-lanzar la excepción para que el llamador pueda manejarla
         raise
