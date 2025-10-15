@@ -1,5 +1,8 @@
 import os
+import re
+import traceback
 from typing import List, Dict, Set, Tuple, Optional
+from datetime import datetime
 
 import pandas as pd
 from rich.console import Console
@@ -44,14 +47,31 @@ def load_valid_users(input_file: str, console: Console) -> pd.DataFrame:
 
         return valid_users
 
-    except FileNotFoundError:
-        logging.error(f"Archivo no encontrado: {input_file}")
+    except FileNotFoundError as e:
+        tb_str = traceback.format_exc()
+        error_msg = f"Archivo no encontrado: {input_file}"
+        logging.error(f"{error_msg}")
+        logging.error(f"Traceback:\n{tb_str}")
+        console.print(f"\n[bold red]❌ {error_msg}[/]")
+        console.print(f"[yellow]Asegúrate de que el archivo input.csv existe en la carpeta del proyecto[/]")
         raise
-    except pd.errors.EmptyDataError:
-        logging.error(f"Archivo vacío: {input_file}")
+    except pd.errors.EmptyDataError as e:
+        tb_str = traceback.format_exc()
+        error_msg = f"Archivo vacío: {input_file}"
+        logging.error(f"{error_msg}")
+        logging.error(f"Traceback:\n{tb_str}")
+        console.print(f"\n[bold red]❌ {error_msg}[/]")
+        console.print(f"[yellow]El archivo input.csv no contiene datos[/]")
         raise
     except Exception as e:
-        logging.error(f"Error al cargar usuarios: {e}")
+        tb_str = traceback.format_exc()
+        error_msg = f"Error al cargar usuarios desde {input_file}"
+        logging.error(f"{error_msg}: {e}")
+        logging.error(f"Traceback completo:\n{tb_str}")
+        console.print(f"\n[bold red]❌ {error_msg}[/]")
+        console.print(f"[red]Tipo de error:[/] {type(e).__name__}")
+        console.print(f"[red]Mensaje:[/] {str(e)}")
+        console.print(f"[dim]Traceback:\n{tb_str}[/]")
         raise
 
 
@@ -111,8 +131,20 @@ def process_users(users_df: pd.DataFrame, credentials: str, console: Console) ->
 
             except Exception as e:
                 summary["errors"] += 1
-                logging.error(f"Error procesando usuario {user['orcid']}: {e}")
-                progress.console.print(f"[yellow]⚠[/] Error procesando {user['nombre']}: {e}")
+                # Capturar traceback completo
+                tb_str = traceback.format_exc()
+                error_msg = f"Error procesando usuario {user['nombre']} ({user['orcid']})"
+                
+                # Log detallado del error con traceback
+                logging.error(f"{error_msg}: {e}")
+                logging.error(f"Traceback completo:\n{tb_str}")
+                
+                # Mostrar en consola de forma más verbose
+                progress.console.print(f"\n[bold red]❌ {error_msg}[/]")
+                progress.console.print(f"[red]Tipo de error:[/] {type(e).__name__}")
+                progress.console.print(f"[red]Mensaje:[/] {str(e)}")
+                progress.console.print(f"[dim]Ver logs para traceback completo[/]\n")
+                
                 summary["index"] += 1
                 progress.update(task, advance=1)
                 continue
@@ -121,9 +153,26 @@ def process_users(users_df: pd.DataFrame, credentials: str, console: Console) ->
     return output_data, summary
 
 
+def clean_illegal_characters(value):
+    """
+    Elimina caracteres ilegales para Excel (caracteres de control ASCII 0-31 y 127).
+    
+    Args:
+        value: Valor a limpiar
+        
+    Returns:
+        String limpio o el valor original si no es string
+    """
+    if isinstance(value, str):
+        # Eliminar caracteres de control (ASCII 0-31 y 127)
+        # Excepto \t (tab=9), \n (newline=10), \r (carriage return=13)
+        return re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]', '', value)
+    return value
+
+
 def save_results(output_data: List[Dict], output_file: str, console: Console) -> None:
     """
-    Guarda los resultados en archivo CSV.
+    Guarda los resultados en archivo XLSX.
 
     Args:
         output_data: Lista de diccionarios con los datos
@@ -137,7 +186,7 @@ def save_results(output_data: List[Dict], output_file: str, console: Console) ->
                 console.print("[yellow]⚠ Advertencia:[/] No se encontraron datos para guardar")
                 # Crear archivo vacío con headers
                 empty_df = pd.DataFrame(columns=["cedula", "nombre_profesor", "orcid_profesor", "title", "journal", "date", "doi", "source", "note", "url_source"])
-                empty_df.to_csv(output_file, index=False)
+                empty_df.to_excel(output_file, index=False, engine='openpyxl')
                 return
 
             df = pd.DataFrame(output_data)
@@ -151,13 +200,32 @@ def save_results(output_data: List[Dict], output_file: str, console: Console) ->
                 logging.info(f"Duplicados eliminados: {initial_count - final_count}")
                 console.print(f"[dim]🗑️  Duplicados eliminados: {initial_count - final_count}[/]")
 
-            df.to_csv(output_file, index=False)
+            # Limpiar caracteres ilegales de todas las columnas de tipo string
+            for col in df.columns:
+                if df[col].dtype == 'object':  # Columnas de texto
+                    df[col] = df[col].apply(clean_illegal_characters)
+            
+            df.to_excel(output_file, index=False, engine='openpyxl')
             logging.info(f"Resultados guardados en: {output_file} ({final_count} registros)")
 
         console.print(f"[green]✓[/] Resultados guardados: [bold]{final_count}[/] registros en [cyan]{output_file}[/]")
 
     except Exception as e:
-        logging.error(f"Error al guardar resultados: {e}")
+        # Capturar traceback completo
+        tb_str = traceback.format_exc()
+        error_msg = f"Error al guardar resultados en {output_file}"
+        
+        # Log detallado con traceback
+        logging.error(f"{error_msg}: {e}")
+        logging.error(f"Traceback completo:\n{tb_str}")
+        
+        # Mostrar en consola de forma verbose
+        console.print(f"\n[bold red]❌ {error_msg}[/]")
+        console.print(f"[red]Tipo de error:[/] {type(e).__name__}")
+        console.print(f"[red]Mensaje:[/] {str(e)}")
+        console.print(f"[yellow]Traceback:[/]")
+        console.print(f"[dim]{tb_str}[/]")
+        
         raise
 
 
@@ -173,9 +241,12 @@ def orcid(console: Optional[Console] = None) -> None:
 
     # Configurar rutas
     root = os.path.dirname(os.path.dirname(__file__))
-    app_root = os.path.dirname(__file__)
     input_file = os.path.join(root, "input.csv")
-    output_file = os.path.join(app_root, "output.csv")
+    
+    # Generar nombre de archivo con fecha
+    fecha_actual = datetime.now().strftime("%Y-%m-%d")
+    output_filename = f"publicaciones_orcid_{fecha_actual}.xlsx"
+    output_file = os.path.join(root, output_filename)
 
     logging.info("Iniciando procesamiento ORCID")
 
@@ -219,9 +290,26 @@ def orcid(console: Optional[Console] = None) -> None:
         logging.info(f"Procesamiento ORCID completado: {summary}")
 
     except Exception as e:
-        error_msg = f"Error crítico en procesamiento ORCID: {e}"
-        console.print(f"\n[bold red]❌ {error_msg}[/]")
-        logging.error(error_msg)
+        # Capturar traceback completo
+        tb_str = traceback.format_exc()
+        error_msg = f"Error crítico en procesamiento ORCID"
+        
+        # Log detallado con traceback completo
+        logging.error(f"{error_msg}: {e}")
+        logging.error(f"Traceback completo:\n{tb_str}")
+        
+        # Mostrar en consola de forma muy verbose
+        console.print(f"\n[bold red]{'='*80}[/]")
+        console.print(f"[bold red]❌ {error_msg.upper()}[/]")
+        console.print(f"[bold red]{'='*80}[/]\n")
+        
+        console.print(f"[red]Tipo de error:[/] [bold]{type(e).__name__}[/]")
+        console.print(f"[red]Mensaje:[/] [bold]{str(e)}[/]\n")
+        
+        console.print(f"[yellow]📋 Traceback detallado:[/]")
+        console.print(Panel(tb_str, border_style="red", title="[bold red]Stack Trace[/]"))
+        
+        console.print(f"\n[cyan]💡 Sugerencia:[/] Revisa el archivo de logs en [bold]orcid/logs/[/] para más detalles")
 
         # Re-lanzar la excepción para que el llamador pueda manejarla
         raise
