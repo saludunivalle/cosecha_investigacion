@@ -1,6 +1,6 @@
 @echo off
 REM Script para ejecutar el programa con entorno virtual
-echo Iniciando Google Scholar...
+echo Iniciando...
 
 REM Verificar si existe el entorno virtual
 if not exist "venv" (

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para ejecutar el programa con entorno virtual
-echo "Iniciando Google Scholar..."
+echo "Iniciando..."
 
 # Verificar si existe el entorno virtual
 if [ ! -d "venv" ]; then

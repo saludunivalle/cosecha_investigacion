@@ -2,7 +2,7 @@
 REM Script para configurar el entorno virtual e instalar dependencias
 REM Compatible con Windows
 
-echo Configurando entorno virtual para el proyecto Google Scholar...
+echo Configurando entorno virtual para el proyecto ...
 
 REM Verificar si Python está instalado
 python --version >nul 2>&1

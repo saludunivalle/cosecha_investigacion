@@ -3,7 +3,7 @@
 # Script para configurar el entorno virtual e instalar dependencias
 # Compatible con Linux y macOS
 
-echo "Configurando entorno virtual para el proyecto Google Scholar..."
+echo "Configurando entorno virtual para el proyecto ..."
 
 # Verificar si Python3 está instalado
 if ! command -v python3 &> /dev/null; then
@@ -47,12 +47,12 @@ echo "Entorno virtual activado."
 
 # Actualizar pip
 echo "Actualizando pip..."
-python -m pip install --upgrade pip
+$VENV_NAME/bin/python3 -m pip install --upgrade pip
 
 # Instalar dependencias
 if [ -f "requirements.txt" ]; then
     echo "Instalando dependencias desde requirements.txt..."
-    pip install -r requirements.txt
+    $VENV_NAME/bin/pip install -r requirements.txt
     
     if [ $? -eq 0 ]; then
         echo "Todas las dependencias se instalaron correctamente."
