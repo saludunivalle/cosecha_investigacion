@@ -2,7 +2,7 @@
 """
 Script principal para procesamiento de publicaciones académicas.
 
-Este script procesa datos de ORCID y Google Scholar para obtener
+Este script procesa datos de ORCID para obtener
 información de publicaciones de investigadores.
 """
 
@@ -45,10 +45,10 @@ def verify_environment() -> bool:
 def main():
     """
     Función principal del programa.
-    Carga variables de entorno y ejecuta el procesamiento de ORCID y Scholar.
+    Carga variables de entorno y ejecuta el procesamiento de ORCID.
     """
     # Mostrar banner de bienvenida
-    console.print(Panel.fit("[bold cyan]Procesamiento de Publicaciones Académicas[/]\n" "[dim]ORCID & Google Scholar Data Extractor[/]", border_style="cyan", padding=(1, 2)))
+    console.print(Panel.fit("[bold cyan]Procesamiento de Publicaciones Académicas[/]\n" "[dim]ORCID Data Extractor[/]", border_style="cyan", padding=(1, 2)))
 
     # Cargar variables de entorno desde archivo .env
     dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
