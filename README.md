@@ -144,20 +144,13 @@ cedula,nombre,orcid
 
 ### ¿Cómo crearlo?
 
-#### Opción 1: Desde Excel
+#### Desde Excel
 
 1. Crea una tabla en Excel con 3 columnas: `cedula`, `nombre`, `orcid`
 2. Llena los datos de cada investigador
 3. Guarda como "CSV (delimitado por comas)"
 4. Renombra el archivo a `input.csv`
 5. Colócalo en la carpeta principal del proyecto
-
-#### Opción 2: Editar el ejemplo
-
-1. El proyecto ya tiene un archivo `input.csv` de ejemplo
-2. Ábrelo con Excel o un editor de texto
-3. Reemplaza los datos con tu información
-4. Guarda los cambios
 
 ### Notas importantes
 
