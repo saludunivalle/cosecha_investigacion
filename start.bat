@@ -22,7 +22,7 @@ if errorlevel 1 (
 
 REM Ejecutar el programa principal
 echo Ejecutando main.py...
-python main.py
+venv\Scripts\python main.py
 
 REM Desactivar entorno virtual al finalizar
 deactivate
