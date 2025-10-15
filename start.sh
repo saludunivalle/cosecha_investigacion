@@ -21,7 +21,7 @@ fi
 
 # Ejecutar el programa principal
 echo "Ejecutando main.py..."
-python main.py
+./venv/bin/python3 main.py
 
 # Desactivar entorno virtual al finalizar
 deactivate

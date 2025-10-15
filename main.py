@@ -9,8 +9,15 @@ información de publicaciones de investigadores.
 import os
 import sys
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich import box
 
 from orcid.app import orcid
+
+# Inicializar Rich Console
+console = Console()
 
 
 def verify_environment() -> bool:
@@ -24,10 +31,12 @@ def verify_environment() -> bool:
     missing_vars = [var for var in required_vars if not os.getenv(var)]
 
     if missing_vars:
-        print("Error: Faltan las siguientes variables de entorno:")
+        error_table = Table(show_header=False, box=box.SIMPLE)
+        error_table.add_column("Variable", style="yellow")
         for var in missing_vars:
-            print(f"  - {var}")
-        print("\nAsegúrate de tener un archivo .env con estas variables configuradas.")
+            error_table.add_row(f"✗ {var}")
+
+        console.print(Panel(error_table, title="[bold red]❌ Error: Variables de Entorno Faltantes[/]", subtitle="Asegúrate de tener un archivo .env configurado", border_style="red"))
         return False
 
     return True
@@ -38,12 +47,15 @@ def main():
     Función principal del programa.
     Carga variables de entorno y ejecuta el procesamiento de ORCID y Scholar.
     """
+    # Mostrar banner de bienvenida
+    console.print(Panel.fit("[bold cyan]Procesamiento de Publicaciones Académicas[/]\n" "[dim]ORCID & Google Scholar Data Extractor[/]", border_style="cyan", padding=(1, 2)))
+
     # Cargar variables de entorno desde archivo .env
     dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
 
     if not os.path.exists(dotenv_path):
-        print(f"Advertencia: No se encontró el archivo .env en {dotenv_path}")
-        print("Intentando usar variables de entorno del sistema...")
+        console.print(f"[yellow]⚠ Advertencia:[/] No se encontró el archivo .env en {dotenv_path}")
+        console.print("[dim]Intentando usar variables de entorno del sistema...[/]\n")
 
     load_dotenv(dotenv_path)
 
@@ -51,22 +63,24 @@ def main():
     if not verify_environment():
         sys.exit(1)
 
-    print("Variables de entorno cargadas correctamente")
-    print("=" * 60)
+    console.print("[green]✓[/] Variables de entorno cargadas correctamente\n")
 
     try:
         # Ejecutar procesamiento de ORCID
-        print("\n Iniciando procesamiento ORCID...")
-        orcid()
-        print("\n" + "=" * 60)
-        print("Procesamiento completado exitosamente")
+        console.rule("[bold blue]Iniciando Procesamiento ORCID[/]", style="blue")
+        orcid(console)
+
+        console.rule("[bold green]Procesamiento Completado[/]", style="green")
+        console.print(Panel("[bold green]✓ Procesamiento completado exitosamente[/]", border_style="green"))
 
     except KeyboardInterrupt:
-        print("\n\nProcesamiento interrumpido por el usuario")
+        console.print("\n")
+        console.print(Panel("[bold yellow]⚠ Procesamiento interrumpido por el usuario[/]", border_style="yellow"))
         sys.exit(1)
 
     except Exception as e:
-        print(f"\n\nError crítico durante el procesamiento: {e}")
+        console.print("\n")
+        console.print(Panel(f"[bold red]❌ Error crítico durante el procesamiento:[/]\n\n{e}", title="Error", border_style="red"))
         sys.exit(1)
 
 
