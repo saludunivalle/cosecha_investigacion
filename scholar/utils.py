@@ -1,29 +1,26 @@
 import csv
 import json
 import os
-import random
 import time
 from difflib import SequenceMatcher
 from os.path import dirname
 
 import pandas as pd
-from scholarly import ProxyGenerator, scholarly
+from scholarly import scholarly
 
 root = dirname(dirname(__file__))
 app_root = dirname(__file__)
 
 clear = lambda: os.system("cls")
 
-scraper_api_keys = ["f21beb7677b41063064a7e73ca3995dc", "d98e42fe84e51b774e5ee4776800af96", "5366a9e7706cecf43af0869353a7990a"]
-proxies = [ProxyGenerator().FreeProxies(), ProxyGenerator().ScraperAPI(random.choice(scraper_api_keys))]
-scholarly.use_proxy(*proxies)
+summary_json = os.path.join(root, "summary.json")
 
 
 def load_temporal(authors: list, scholar_summary: dict):
-    try:
-        data = []
-        authors = authors.copy()
+    data = []
+    authors = authors.copy()
 
+    try:
         if scholar_summary["index"] > 0:
             with open(os.path.join(root, "temporal.json"), "r") as temp_data:
                 data = json.load(temp_data)
@@ -137,14 +134,11 @@ def get_essential_data(google_scholar, data, scholar_summary, remaining_pub, tot
 
 def save_summary(summary_dict: dict):
     # abrir el archivo summary.json en modo lectura
-    with open(os.path.join(root, "summary.json"), "r") as file:
-        summary = json.load(file)
+    with open(summary_json, "r") as file:
+        summary: dict = json.load(file)
+        summary.update(summary_dict)
 
-    # actualizar los datos con el resumen de ORCID
-    summary.update(summary_dict)
-
-    # abrir el archivo summary.json en modo escritura
-    with open(os.path.join(root, "summary.json"), "w") as file:
+    with open(summary_json, "w") as file:
         json.dump(summary, file, indent=4)
 
 
