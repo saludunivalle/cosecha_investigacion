@@ -142,86 +142,69 @@ def get_journal(work_summary: List[Dict]) -> str:
 
 
 def get_date(work_summary: List[Dict]) -> str:
-    """
-    Extrae y formatea la fecha de publicación del work summary.
-
-    Args:
-        work_summary: Lista con el resumen del trabajo desde ORCID
-
-    Returns:
-        Fecha formateada (YYYY, YYYY-MM o YYYY-MM-DD) o cadena vacía
-    """
     try:
         if not work_summary:
             return ""
-
         pub_date = work_summary[0].get("publication-date", {})
-        if not pub_date:
+        if not pub_date or not isinstance(pub_date, dict):
             return ""
-
-        year = safe_get(pub_date, "year", "value")
-        month = safe_get(pub_date, "month", "value")
-        day = safe_get(pub_date, "day", "value")
-
+        year = pub_date.get("year", {}).get("value", "")
+        month = pub_date.get("month", {}).get("value", "")
+        day = pub_date.get("day", {}).get("value", "")
         if not year:
             return ""
-
-        # Formatear según disponibilidad de componentes
-        if month and day:
+        if month:
+            month = month.zfill(2)
+        if day:
+            day = day.zfill(2)
+        if year and month and day:
             return f"{year}-{month}-{day}"
-        elif month:
+        elif year and month:
             return f"{year}-{month}"
         else:
             return year
-
     except Exception as e:
         logging.error(f"Error extrayendo fecha: {e}")
         return ""
 
 
 def get_doi(work_summary: List[Dict]) -> str:
-    """
-    Extrae el DOI u otro identificador externo del work summary.
-
-    Args:
-        work_summary: Lista con el resumen del trabajo desde ORCID
-
-    Returns:
-        DOI o identificador externo, o cadena vacía
-    """
     try:
         if not work_summary:
             return ""
-
         external_ids = work_summary[0].get("external-ids", {}).get("external-id", [])
-
-        if not external_ids:
-            return ""
-
-        # Retornar el primer identificador disponible
-        return safe_get(external_ids[0], "external-id-value")
-
+        for ext in external_ids:
+            if ext.get("external-id-type", "").lower() == "doi":
+                value = ext.get("external-id-value", "")
+                if value:
+                    return value
+        return ""
     except Exception as e:
         logging.error(f"Error extrayendo DOI: {e}")
         return ""
 
 
 def get_url_source(work_summary: List[Dict]) -> str:
-    """
-    Extrae la URL de origen del work summary.
-
-    Args:
-        work_summary: Lista con el resumen del trabajo desde ORCID
-
-    Returns:
-        URL de origen o cadena vacía
-    """
     try:
         if not work_summary:
             return ""
-        return safe_get(work_summary[0], "url", "value")
+        url = work_summary[0].get("url", None)
+        if url:
+            return url.get("value", "") if isinstance(url, dict) else url
+        external_ids = work_summary[0].get("external-ids", {}).get("external-id", [])
+        for ext in external_ids:
+            if ext.get("external-id-type", "").lower() == "doi":
+                ext_url = ext.get("external-id-url", {})
+                if isinstance(ext_url, dict):
+                    value = ext_url.get("value", "")
+                    if value:
+                        return value
+                elif isinstance(ext_url, str):
+                    if ext_url:
+                        return ext_url
+        return ""
     except Exception as e:
-        logging.error(f"Error extrayendo URL: {e}")
+        logging.error(f"Error extrayendo URL de origen: {e}")
         return ""
 
 
@@ -261,6 +244,10 @@ def _create_work_record(user: Dict, work_summary: List[Dict]) -> Dict:
     Returns:
         Diccionario con registro de publicación
     """
+   # print(work_summary)
+    #print("DEBUG date", get_date(work_summary))
+    #print("DEBUG doi", get_doi(work_summary))
+    #print("DEBUG url_source", get_url_source(work_summary))
     return {
         "cedula": user.get("cedula", ""),
         "nombre_profesor": user.get("nombre", ""),
