@@ -28,7 +28,7 @@ def load_valid_users(input_file: str, console: Console) -> pd.DataFrame:
     try:
         with console.status("[bold blue]Cargando usuarios del archivo CSV...", spinner="dots"):
             # Leer solo las columnas necesarias
-            data = pd.read_csv(input_file, usecols=["orcid", "nombre", "cedula"])
+            data = pd.read_csv(input_file, encoding="latin1" ,usecols=["orcid", "nombre", "cedula"])
 
             # Filtrar usuarios con ORCID válido usando pandas (más eficiente)
             valid_users = data[data["orcid"].notna() & (data["orcid"] != "-") & (data["orcid"].astype(str) != "nan")].copy()  # No es NaN  # No es guión  # No es string "nan"
@@ -155,7 +155,7 @@ def process_users(users_df: pd.DataFrame, credentials: str, console: Console) ->
 
 def clean_illegal_characters(value):
     """
-    Elimina caracteres ilegales para Excel (caracteres de control ASCII 0-31 y 127).
+    Elimina caracteres ilegales para Excel de forma exhaustiva.
     
     Args:
         value: Valor a limpiar
@@ -164,9 +164,18 @@ def clean_illegal_characters(value):
         String limpio o el valor original si no es string
     """
     if isinstance(value, str):
-        # Eliminar caracteres de control (ASCII 0-31 y 127)
-        # Excepto \t (tab=9), \n (newline=10), \r (carriage return=13)
-        return re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]', '', value)
+        # Eliminar TODOS los caracteres de control (ASCII 0-31 y 127-159)
+        # Mantener solo: tab (9), newline (10), carriage return (13)
+        # Esto incluye caracteres Unicode problemáticos
+        cleaned = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]', '', value)
+        
+        # Eliminar caracteres Unicode de control adicionales
+        cleaned = re.sub(r'[\u0000-\u0008\u000B-\u000C\u000E-\u001F\u007F-\u009F]', '', cleaned)
+        
+        # Asegurar que no haya caracteres nulos o problemáticos adicionales
+        cleaned = ''.join(char for char in cleaned if char.isprintable() or char in '\t\n\r ')
+        
+        return cleaned
     return value
 
 
@@ -181,15 +190,44 @@ def save_results(output_data: List[Dict], output_file: str, console: Console) ->
     """
     try:
         with console.status("[bold green]Guardando resultados...", spinner="dots"):
+            columns = [
+                "cedula",
+                "nombre_profesor",
+                "orcid_profesor",
+                "title",
+                "journal",
+                "date",
+                "doi",
+                "source",
+                "note",
+                "url_source"
+            ]
             if not output_data:
                 logging.warning("No hay datos para guardar")
                 console.print("[yellow]⚠ Advertencia:[/] No se encontraron datos para guardar")
-                # Crear archivo vacío con headers
-                empty_df = pd.DataFrame(columns=["cedula", "nombre_profesor", "orcid_profesor", "title", "journal", "date", "doi", "source", "note", "url_source"])
+                empty_df = pd.DataFrame(columns=columns)
                 empty_df.to_excel(output_file, index=False, engine='openpyxl')
                 return
 
+            # Limpiar caracteres ilegales ANTES de crear el DataFrame
+            for row in output_data:
+                for key, value in row.items():
+                    if isinstance(value, str):
+                        row[key] = clean_illegal_characters(value)
+
+            # Crear DataFrame SIN especificar columns para que tome todas las claves
             df = pd.DataFrame(output_data)
+            
+            # Asegurarse de que todas las columnas requeridas existen y en el orden correcto
+            for col in columns:
+                if col not in df.columns:
+                    df[col] = ""
+            
+            # Reordenar columnas según el orden deseado
+            df = df[columns]
+            
+            # Rellenar NaN con cadena vacía
+            df.fillna("", inplace=True)
 
             # Verificación final de duplicados (por seguridad)
             initial_count = len(df)
@@ -202,30 +240,24 @@ def save_results(output_data: List[Dict], output_file: str, console: Console) ->
 
             # Limpiar caracteres ilegales de todas las columnas de tipo string
             for col in df.columns:
-                if df[col].dtype == 'object':  # Columnas de texto
+                if df[col].dtype == 'object':
                     df[col] = df[col].apply(clean_illegal_characters)
-            
+
             df.to_excel(output_file, index=False, engine='openpyxl')
             logging.info(f"Resultados guardados en: {output_file} ({final_count} registros)")
 
         console.print(f"[green]✓[/] Resultados guardados: [bold]{final_count}[/] registros en [cyan]{output_file}[/]")
 
     except Exception as e:
-        # Capturar traceback completo
         tb_str = traceback.format_exc()
         error_msg = f"Error al guardar resultados en {output_file}"
-        
-        # Log detallado con traceback
         logging.error(f"{error_msg}: {e}")
         logging.error(f"Traceback completo:\n{tb_str}")
-        
-        # Mostrar en consola de forma verbose
         console.print(f"\n[bold red]❌ {error_msg}[/]")
         console.print(f"[red]Tipo de error:[/] {type(e).__name__}")
         console.print(f"[red]Mensaje:[/] {str(e)}")
         console.print(f"[yellow]Traceback:[/]")
         console.print(f"[dim]{tb_str}[/]")
-        
         raise
 
 
