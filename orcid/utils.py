@@ -148,21 +148,24 @@ def get_date(work_summary: List[Dict]) -> str:
         pub_date = work_summary[0].get("publication-date", {})
         if not pub_date or not isinstance(pub_date, dict):
             return ""
-        year = pub_date.get("year", {}).get("value", "")
-        month = pub_date.get("month", {}).get("value", "")
-        day = pub_date.get("day", {}).get("value", "")
-        if not year:
+        year = pub_date.get("year", {})
+        month = pub_date.get("month", {})
+        day = pub_date.get("day", {})
+        year_val = year.get("value") if isinstance(year, dict) else year or ""
+        month_val = month.get("value") if isinstance(month, dict) else month or ""
+        day_val = day.get("value") if isinstance(day, dict) else day or ""
+        if not year_val:
             return ""
-        if month:
-            month = month.zfill(2)
-        if day:
-            day = day.zfill(2)
-        if year and month and day:
-            return f"{year}-{month}-{day}"
-        elif year and month:
-            return f"{year}-{month}"
+        if month_val:
+            month_val = str(month_val).zfill(2)
+        if day_val:
+            day_val = str(day_val).zfill(2)
+        if year_val and month_val and day_val:
+            return f"{year_val}-{month_val}-{day_val}"
+        elif year_val and month_val:
+            return f"{year_val}-{month_val}"
         else:
-            return year
+            return str(year_val)
     except Exception as e:
         logging.error(f"Error extrayendo fecha: {e}")
         return ""
@@ -306,6 +309,7 @@ def get_records(user: Dict, access_token: str, file_output: List[Dict], console:
         for work in works:
             try:
                 work_summary = work.get("work-summary", [])
+                print("DEBUG work_summary", work_summary)
                 if not work_summary:
                     continue
 
