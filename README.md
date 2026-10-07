@@ -1,10 +1,39 @@
+
 # 📚 Extractor de Publicaciones Académicas ORCID
 
-## 🎯 ¿Qué hace este programa?
+## 🎯 Descripción General
 
-Este programa busca automáticamente las publicaciones académicas (artículos, libros, capítulos) de investigadores usando sus códigos ORCID.
+**Extractor de Publicaciones Académicas ORCID** es una herramienta automatizada diseñada para facilitar la recopilación, organización y exportación de la producción académica de investigadores a partir de sus códigos ORCID. El programa permite obtener de manera masiva y estructurada información sobre artículos, libros, capítulos y otros productos académicos registrados en la plataforma ORCID, generando un archivo Excel listo para análisis, reportes institucionales o gestión de indicadores.
 
-**En palabras simples**: Tú le das una lista de investigadores con sus códigos ORCID, y el programa te devuelve todas sus publicaciones organizadas en una tabla de Excel.
+### Características principales
+- **Automatización total:** Solo necesitas una lista de investigadores con sus códigos ORCID y el programa se encarga del resto.
+- **Resultados en Excel profesional:** Exporta los datos en formato XLSX, compatible con Excel, Google Sheets y otros programas.
+- **Soporte para grandes volúmenes:** Procesa decenas o cientos de investigadores en una sola ejecución, mostrando barra de progreso y tiempos estimados.
+- **Registro detallado de errores y logs:** Guarda bitácoras de cada ejecución para facilitar el soporte y la trazabilidad.
+- **Configuración sencilla:** Instalación y uso guiados para Windows, Mac y Linux.
+- **Personalizable y extensible:** Código abierto y modular, fácil de adaptar a nuevas necesidades.
+
+### ¿Cómo funciona?
+1. **Preparas un archivo CSV/Excel** con los nombres y códigos ORCID de los investigadores.
+2. **Configuras tus credenciales ORCID** (guía paso a paso incluida).
+3. **Ejecutas el programa** (doble clic o desde terminal, según tu sistema operativo).
+4. El programa consulta la API de ORCID, descarga y organiza todas las publicaciones encontradas.
+5. **Obtienes un archivo Excel** con toda la información lista para usar.
+
+### Casos de uso
+- Consolidación de hojas de vida académicas para grupos de investigación.
+- Reportes institucionales de producción científica.
+- Apoyo a procesos de acreditación, convocatorias y rankings.
+- Seguimiento y análisis bibliométrico.
+
+### Tecnologías empleadas
+- **Python 3.8+**
+- **Pandas** (procesamiento de datos)
+- **OpenPyXL** (exportación a Excel)
+- **Rich** (interfaz visual y barra de progreso)
+- **ORCID API** (fuente de datos)
+
+**En resumen:** Esta herramienta ahorra horas de trabajo manual, reduce errores y garantiza que la información de publicaciones esté siempre actualizada y bien organizada.
 
 ---
 

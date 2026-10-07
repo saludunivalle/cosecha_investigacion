@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para configurar el entorno virtual e instalar dependencias
-# Compatible con Linux y macOS
+# Compatible con Linux, macOS y Git Bash en Windows
 
 echo "Configurando entorno virtual para el proyecto ..."
 
@@ -11,19 +11,24 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Verificar si pip está instalado
-if ! python3 -m pip --version &> /dev/null; then
-    echo "Error: pip no está disponible. Por favor instala pip primero."
-    exit 1
-fi
-
 # Nombre del entorno virtual
 VENV_NAME="venv"
+
+# Seleccionar las rutas según el sistema operativo.
+if [ -f "$VENV_NAME/Scripts/activate" ]; then
+    VENV_BIN="$VENV_NAME/Scripts"
+    VENV_ACTIVATE="$VENV_BIN/activate"
+    VENV_PYTHON="$VENV_BIN/python.exe"
+else
+    VENV_BIN="$VENV_NAME/bin"
+    VENV_ACTIVATE="$VENV_BIN/activate"
+    VENV_PYTHON="$VENV_BIN/python3"
+fi
 
 # Crear entorno virtual si no existe
 if [ ! -d "$VENV_NAME" ]; then
     echo "Creando entorno virtual '$VENV_NAME'..."
-    python3 -m venv $VENV_NAME
+    python3 -m venv "$VENV_NAME"
     
     if [ $? -ne 0 ]; then
         echo "Error: No se pudo crear el entorno virtual."
@@ -34,9 +39,37 @@ else
     echo "El entorno virtual '$VENV_NAME' ya existe."
 fi
 
+# Volver a seleccionar las rutas por si el entorno acaba de crearse.
+if [ -f "$VENV_NAME/Scripts/activate" ]; then
+    VENV_BIN="$VENV_NAME/Scripts"
+    VENV_ACTIVATE="$VENV_BIN/activate"
+    VENV_PYTHON="$VENV_BIN/python.exe"
+else
+    VENV_BIN="$VENV_NAME/bin"
+    VENV_ACTIVATE="$VENV_BIN/activate"
+    VENV_PYTHON="$VENV_BIN/python3"
+fi
+
+# Un entorno creado en Windows no puede ejecutarse desde WSL.
+if [ -f "$VENV_NAME/Scripts/python.exe" ] && [ "$(uname -s)" = "Linux" ]; then
+    echo "Error: '$VENV_NAME' fue creado para Windows y esta terminal es WSL."
+    echo "Elimina '$VENV_NAME' y vuelve a ejecutar este script desde WSL para recrearlo."
+    exit 1
+fi
+
+# Verificar que el entorno tenga pip.
+if [ ! -f "$VENV_PYTHON" ] || ! "$VENV_PYTHON" -m pip --version &> /dev/null; then
+    echo "Error: pip no está disponible dentro del entorno virtual '$VENV_NAME'."
+    exit 1
+fi
+
 # Activar entorno virtual
 echo "Activando entorno virtual..."
-source $VENV_NAME/bin/activate
+if [ ! -f "$VENV_ACTIVATE" ]; then
+    echo "Error: No se encontró el activador del entorno virtual en '$VENV_ACTIVATE'."
+    exit 1
+fi
+source "$VENV_ACTIVATE"
 
 if [ $? -ne 0 ]; then
     echo "Error: No se pudo activar el entorno virtual."
@@ -47,12 +80,12 @@ echo "Entorno virtual activado."
 
 # Actualizar pip
 echo "Actualizando pip..."
-$VENV_NAME/bin/python3 -m pip install --upgrade pip
+"$VENV_PYTHON" -m pip install --upgrade pip
 
 # Instalar dependencias
 if [ -f "requirements.txt" ]; then
     echo "Instalando dependencias desde requirements.txt..."
-    $VENV_NAME/bin/pip install -r requirements.txt
+    "$VENV_PYTHON" -m pip install -r requirements.txt
     
     if [ $? -eq 0 ]; then
         echo "Todas las dependencias se instalaron correctamente."
@@ -68,7 +101,8 @@ echo ""
 echo "Configuración completada exitosamente."
 echo ""
 echo "Para usar el entorno virtual en el futuro:"
-echo "   Activar:   source $VENV_NAME/bin/activate"
+echo "   Activar en Linux/macOS: source $VENV_NAME/bin/activate"
+echo "   Activar en Git Bash/Windows: source $VENV_NAME/Scripts/activate"
 echo "   Desactivar: deactivate"
 echo ""
 echo "Para ejecutar el programa:"
